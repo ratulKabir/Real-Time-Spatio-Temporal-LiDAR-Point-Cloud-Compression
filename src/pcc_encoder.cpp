@@ -15,13 +15,14 @@ int main(int argc, char** argv) {
   float pitch_precision, yaw_precision, threshold;
   int tile_size;
 
-  namespace po = boost::program_options;
+  namespace po = boost::program_options; // obtain program options, that is (name, value) pairs from the user, 
+                                         // via conventional methods such as command line and config file.
 
   po::options_description opts("PCC options");
   opts.add_options()
     ("help,h", "Print help messages")
-    ("path", po::value<std::string>(&file_path)->required(), "raw point cloud data path")
-    ("file", po::value<std::string>(&file_name)->required(), "raw point cloud data path")
+    // ("path", po::value<std::string>(&file_path)->required(), "raw point cloud data path")
+    ("file", po::value<std::string>(&file_name)->required(), "raw point cloud data file name")
     ("out", po::value<std::string>(&out_file)->required(), "compressed data filename")
     ("pitch,p", po::value<float>(&pitch_precision)->required(), "pitch precision")
     ("yaw,y", po::value<float>(&yaw_precision)->required(), "yaw precision")
@@ -52,8 +53,8 @@ int main(int argc, char** argv) {
   
   // create a vector to store frames;
   std::vector<point_cloud> pcloud_data;
-  file_path = file_path + "/" + file_name;
-  load_pcloud(file_path, pcloud_data);
+  // file_path = file_path + "/" + file_name;
+  load_pcloud(file_name, pcloud_data);
 
   std::vector<std::string> filenames;
   filenames.push_back(file_name);
@@ -134,10 +135,24 @@ int main(int argc, char** argv) {
   // 5. tile_fit_lengths
   export_tile_fit_lengths(tile_fit_lengths, "tile_fit_lengths.bin");
   tile_fit_lengths.clear();
-  
+
+ // get file name for saving 
+   std::string delimiter = "/";
+
+  size_t pos = 0;
+  std::string token;
+  while ((pos = file_name.find(delimiter)) != std::string::npos) {
+      token = file_name.substr(0, pos);
+      // std::cout << token << std::endl;
+      file_name.erase(0, pos + delimiter.length());
+  }
+  // std::cout << "FILE ANEM: " << file_name.substr(0, file_name.find(".")) << std::endl;
+
   // 6. make a tar.gz file
+  // std::string s = "../data/0000.bin";
+
   std::string cmd;
-  cmd = "tar -czvf" + out_file + " filenames.bin"  + " b_mat.bin"
+  cmd = "tar -czvf" + out_file+file_name.substr(0, file_name.find("."))+".tar.gz" + " filenames.bin"  + " b_mat.bin"
       + " coefficients.bin" + " occ_mat.bin"
       + " unfit_nums.bin" + " tile_fit_lengths.bin";
 
